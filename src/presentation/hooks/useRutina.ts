@@ -1,145 +1,16 @@
-import { useEffect, useState } from "react";
-import { Receta } from "../../domain/models/Rutina";
-import { RecipesUseCase } from "../../domain/useCases/recipes/RecipesUseCase";
+import { useState, useEffect } from "react";
+import { RutinaUseCase } from "@/src/domain/useCases/rutina/RutinaUseCase";
 
-// Instancia única del UseCase
-const recipesUseCase = new RecipesUseCase();
+export function useRutina(usuarioId: string) {
+  const [rutinas, setRutinas] = useState([]);
 
-/**
- * useRecipes - Hook de Gestión de Recetas
- *
- * Maneja el estado de las recetas y proporciona métodos
- * para crear, actualizar, eliminar y buscar.
- *
- * ESTADOS:
- * - recetas: Array de recetas
- * - cargando: Boolean de carga
- *
- * MÉTODOS:
- * - cargarRecetas: Obtiene todas las recetas
- * - buscar: Filtra por ingrediente
- * - crear: Crea nueva receta
- * - actualizar: Modifica receta existente
- * - eliminar: Borra receta
- * - seleccionarImagen: Abre galería
- */
-export function useRecipes() {
-  const [recetas, setRecetas] = useState<Receta[]>([]);
-  const [cargando, setCargando] = useState(true);
-
-  // AL MONTAR: Cargar todas las recetas
   useEffect(() => {
-    cargarRecetas();
-  }, []);
+    if (!usuarioId) return;
 
-  /**
-   * Cargar todas las recetas
-   */
-  const cargarRecetas = async () => {
-    setCargando(true);
-    const data = await recipesUseCase.obtenerRecetas();
-    setRecetas(data);
-    setCargando(false);
-  };
+    RutinaUseCase.getRutinasDelUsuario(usuarioId)
+      .then(setRutinas)
+      .catch(console.error);
+  }, [usuarioId]);
 
-  /**
-   * Buscar recetas por ingrediente
-   */
-  const buscar = async (ingrediente: string) => {
-    setCargando(true);
-    const data = await recipesUseCase.buscarPorIngrediente(ingrediente);
-    setRecetas(data);
-    setCargando(false);
-  };
-
-  /**
-   * Crear nueva receta
-   * Al terminar, recarga la lista automáticamente
-   */
-  const crear = async (
-    titulo: string,
-    descripcion: string,
-    ingredientes: string[],
-    chefId: string,
-    imagenUri?: string
-  ) => {
-    const resultado = await recipesUseCase.crearReceta(
-      titulo,
-      descripcion,
-      ingredientes,
-      chefId,
-      imagenUri
-    );
-
-    // Si fue exitoso, recargar lista
-    if (resultado.success) {
-      await cargarRecetas();
-    }
-
-    return resultado;
-  };
-
-  /**
-   * Actualizar receta existente
-   */
-  const actualizar = async (
-    id: string,
-    titulo: string,
-    descripcion: string,
-    ingredientes: string[],
-    imagenUri?: string
-  ) => {
-    const resultado = await recipesUseCase.actualizarReceta(
-      id,
-      titulo,
-      descripcion,
-      ingredientes,
-      imagenUri
-    );
-
-    if (resultado.success) {
-      await cargarRecetas();
-    }
-
-    return resultado;
-  };
-
-  /**
-   * Eliminar receta
-   */
-  const eliminar = async (id: string) => {
-    const resultado = await recipesUseCase.eliminarReceta(id);
-
-    if (resultado.success) {
-      await cargarRecetas();
-    }
-
-    return resultado;
-  };
-
-  /**
-   * Seleccionar imagen de galería
-   */
-  const seleccionarImagen = async () => {
-    return await recipesUseCase.seleccionarImagen();
-  };
-
-  /**
-   * Tomar foto con la cámara
-   */
-  const tomarFoto = async () => {
-    return await recipesUseCase.tomarFoto();
-  };
-
-  return {
-    recetas,
-    cargando,
-    cargarRecetas,
-    buscar,
-    crear,
-    actualizar,
-    eliminar,
-    seleccionarImagen,
-    tomarFoto,
-  };
+  return { rutinas, createRutina: RutinaUseCase.createRutina };
 }

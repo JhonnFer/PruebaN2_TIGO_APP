@@ -21,7 +21,7 @@ import {
 export default function RegistroScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rolSeleccionado, setRolSeleccionado] = useState<"chef" | "usuario">(
+  const [rolSeleccionado, setRolSeleccionado] = useState<"entrenador" | "usuario">(
     "usuario" // Por defecto: usuario
   );
   const [cargando, setCargando] = useState(false);
@@ -30,25 +30,22 @@ export default function RegistroScreen() {
 
   const handleRegistro = async () => {
     console.log("Rol seleccionado antes de registrar:", rolSeleccionado);
-    // VALIDACIÓN 1: Campos vacíos
+
     if (!email || !password) {
       Alert.alert("Error", "Completa todos los campos");
       return;
     }
 
-    // VALIDACIÓN 2: Longitud de contraseña
     if (password.length < 6) {
       Alert.alert("Error", "La contraseña debe tener al menos 6 caracteres");
       return;
     }
 
-    // REGISTRO
     setCargando(true);
     const resultado = await registrar(email, password, rolSeleccionado);
     setCargando(false);
 
     if (resultado.success) {
-      // Éxito: Redirigir a login
       Alert.alert("Éxito", "Cuenta creada correctamente", [
         { text: "OK", onPress: () => router.replace("/auth/login") },
       ]);
@@ -64,7 +61,7 @@ export default function RegistroScreen() {
 
         <TextInput
           style={globalStyles.input}
-          placeholder="Email"
+          placeholder="Correo electrónico"
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
@@ -100,21 +97,21 @@ export default function RegistroScreen() {
             </Text>
           </TouchableOpacity>
 
-          {/* BOTÓN: Chef */}
+          {/* BOTÓN: Entrenador */}
           <TouchableOpacity
             style={[
               styles.botonRol,
-              rolSeleccionado === "chef" && styles.botonRolActivo,
+              rolSeleccionado === "entrenador" && styles.botonRolActivo,
             ]}
-            onPress={() => setRolSeleccionado("chef")}
+            onPress={() => setRolSeleccionado("entrenador")}
           >
             <Text
               style={[
                 styles.textoRol,
-                rolSeleccionado === "chef" && styles.textoRolActivo,
+                rolSeleccionado === "entrenador" && styles.textoRolActivo,
               ]}
             >
-              Chef
+              Entrenador
             </Text>
           </TouchableOpacity>
         </View>
@@ -179,4 +176,3 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
   },
 });
-

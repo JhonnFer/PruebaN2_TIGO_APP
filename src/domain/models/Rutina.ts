@@ -6,13 +6,14 @@
  */
 
 export interface Rutina {
-  id: string;               // UUID único de la rutina
-  titulo: string;           // Nombre de la rutina (e.g. "Pierna - Semana 1")
-  descripcion?: string;     // (Opcional) Descripción general
-  ejercicios: Ejercicio[];  // Lista de ejercicios incluidos en la rutina
-  entrenadorId: string;     // ID del entrenador que la creó
-  imagenUrl?: string;       // (Opcional) URL de imagen de portada
-  createdAt: string;        // Fecha de creación en formato ISO string
+  id: string;
+  titulo: string;
+  descripcion?: string;
+  objetivo?: string;
+  ejercicios: Ejercicio[];
+  entrenadorId: string;
+  imagenUrl?: string;
+  createdAt?: string;  // <--- Hazlo opcional
 }
 
 /**
