@@ -1,6 +1,7 @@
 // src/styles/globalStyles.ts
 import { StyleSheet } from "react-native";
-import { borderRadius, colors, fontSize, shadows, spacing } from "./theme";
+// Asumo que estas constantes existen en ./theme
+import { borderRadius, colors, fontSize, shadows, spacing } from "./theme"; 
 
 export const globalStyles = StyleSheet.create({
   // CONTENEDORES
@@ -16,6 +17,18 @@ export const globalStyles = StyleSheet.create({
     backgroundColor: colors.background,
     padding: spacing.lg,
   },
+    
+    // 🎯 NUEVO: Contenedor de pantalla completa (usado en CatalogoPlanes)
+    fullScreenContainer: { 
+        flex: 1, 
+        backgroundColor: colors.background, // Usamos el color de fondo global
+    },
+    
+    // 🎯 NUEVO: Contenedor con padding para el contenido
+    contentContainer: { 
+        flex: 1, 
+        paddingHorizontal: spacing.md, 
+    },
 
   contentPadding: {
     padding: spacing.md,
@@ -65,7 +78,7 @@ export const globalStyles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  // TARJETAS
+  // TARJETAS (PLANES)
   card: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
@@ -76,7 +89,7 @@ export const globalStyles = StyleSheet.create({
 
   cardTop: {
     height: 100,
-    backgroundColor: "#6A5ACD",
+    backgroundColor: colors.secondary, // Usando color secundario de theme
   },
 
   cardContent: {
@@ -86,7 +99,7 @@ export const globalStyles = StyleSheet.create({
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
 
   cardName: {
@@ -96,37 +109,41 @@ export const globalStyles = StyleSheet.create({
   },
 
   cardPrice: {
-    fontSize: fontSize.md,
+    fontSize: fontSize.xl, // Precio ligeramente más grande
     fontWeight: "bold",
     color: colors.primary,
   },
 
   cardPromo: {
-    backgroundColor: "#d4f4dd",
+    backgroundColor: "#d4f4dd", // Verde claro de ejemplo
     alignSelf: "flex-start",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    marginBottom: 8,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+    marginBottom: spacing.sm,
+    borderWidth: 1, 
+    borderColor: "#90EE90",
   },
 
   cardPromoText: {
-    color: "#2a7f3e",
+    color: "#2a7f3e", // Verde oscuro de ejemplo
     fontWeight: "bold",
+    fontSize: fontSize.sm,
   },
 
   cardDescription: {
     fontSize: fontSize.sm,
     color: colors.textSecondary,
-    marginBottom: 8,
+    marginBottom: spacing.md,
   },
 
   cardDetails: {
     flexDirection: "row",
-    gap: 12,
+    gap: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: "#eee",
-    paddingTop: 8,
+    borderTopColor: colors.border,
+    paddingTop: spacing.sm,
+    marginBottom: spacing.xs,
   },
 
   cardDetail: {
@@ -135,9 +152,9 @@ export const globalStyles = StyleSheet.create({
   },
 
   cardButton: {
-    marginTop: 12,
+    marginTop: spacing.sm,
     backgroundColor: colors.primary,
-    paddingVertical: 10,
+    paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
     alignItems: "center",
   },
@@ -145,13 +162,14 @@ export const globalStyles = StyleSheet.create({
   cardButtonText: {
     color: colors.white,
     fontWeight: "bold",
+    fontSize: fontSize.md,
   },
 
   // HEADER
   header: {
     backgroundColor: colors.primary,
     padding: spacing.md,
-    paddingBottom: 64,
+    paddingBottom: 64, // Da espacio para que el buscador se superponga
   },
 
   headerTitle: {
@@ -181,20 +199,23 @@ export const globalStyles = StyleSheet.create({
     paddingHorizontal: 12,
     height: 40,
     elevation: 3,
+    ...shadows.small,
   },
 
   searchButton: {
     backgroundColor: colors.primary,
-    marginLeft: 8,
+    marginLeft: spacing.sm,
     paddingHorizontal: 12,
     borderRadius: borderRadius.md,
     justifyContent: "center",
     alignItems: "center",
   },
 
-  searchButtonText: {
+    // 🎯 NUEVO: Ícono del botón de búsqueda (para el "🔍")
+  searchButtonIcon: { 
     color: colors.white,
     fontSize: fontSize.md,
+    // Podrías necesitar un tamaño un poco más grande para el ícono
   },
 
   sectionTitle: {
