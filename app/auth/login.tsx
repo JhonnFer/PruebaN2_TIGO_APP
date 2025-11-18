@@ -10,20 +10,31 @@ export default function LoginScreen() {
   const [contrasena, setContrasena] = useState("");
   const router = useRouter();
 
-  const handleLogin = async () => {
+  // ---------------------- Login como Usuario Registrado ----------------------
+  const handleLoginUsuario = async () => {
     try {
-      const user = await login(email, contrasena);
-      alert(`Bienvenido ${user.nombre} (${user.role})`);
-      router.push("/"); // Redirige al dashboard o pantalla principal
+      const user = await login(email, contrasena, router, "Usuario");
+      alert(`Bienvenido ${user.nombre} (Usuario Registrado)`);
     } catch (e: any) {
       alert(`Error: ${e.message}`);
     }
   };
 
+  // ---------------------- Login como Asesor Comercial ----------------------
+  const handleLoginAsesor = async () => {
+    try {
+      const user = await login(email, contrasena, router, "Asesor");
+      alert(`Bienvenido ${user.nombre} (Asesor Comercial)`);
+    } catch (e: any) {
+      alert(`Error: ${e.message}`);
+    }
+  };
+
+  // ---------------------- Login Invitado ----------------------
   const handleInvitado = () => {
     const invitado = loginInvitado();
-    alert(`Bienvenido ${invitado.nombre} (${invitado.role})`);
-    router.push("/"); // Redirige al dashboard como invitado
+    alert(`Bienvenido ${invitado.nombre} (Invitado)`);
+    router.replace("/explore");
   };
 
   return (
@@ -48,25 +59,36 @@ export default function LoginScreen() {
 
       {error && <Text style={{ color: "red", marginBottom: 10 }}>{error}</Text>}
 
+      {/* Botón de Login Usuario */}
       <TouchableOpacity
         style={[globalStyles.button, globalStyles.buttonPrimary, { width: "100%" }]}
-        onPress={handleLogin}
+        onPress={handleLoginUsuario}
         disabled={loading}
       >
         <Text style={globalStyles.buttonText}>
-          {loading ? "Ingresando..." : "Login"}
+          {loading ? "Ingresando..." : "Ingresar como Usuario"}
         </Text>
       </TouchableOpacity>
 
-      {/* Botón para invitado */}
+      {/* Botón de Login Asesor */}
       <TouchableOpacity
         style={[globalStyles.button, globalStyles.buttonSecondary, { width: "100%", marginTop: 10 }]}
+        onPress={handleLoginAsesor}
+        disabled={loading}
+      >
+        <Text style={globalStyles.buttonText}>
+          {loading ? "Ingresando..." : "Ingresar como Asesor"}
+        </Text>
+      </TouchableOpacity>
+
+      {/* Botón Login Invitado */}
+      <TouchableOpacity
+        style={[globalStyles.button, { width: "100%", backgroundColor: "#AAA", marginTop: 10 }]}
         onPress={handleInvitado}
       >
         <Text style={globalStyles.buttonText}>Entrar como Invitado</Text>
       </TouchableOpacity>
 
-      {/* Enlace a registro */}
       <TouchableOpacity onPress={() => router.push("/auth/registro")} style={{ marginTop: 15 }}>
         <Text style={{ color: globalStyles.textPrimary.color, fontWeight: "600" }}>
           ¿No tienes cuenta? Registrarse

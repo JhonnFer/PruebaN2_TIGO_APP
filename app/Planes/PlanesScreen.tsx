@@ -1,4 +1,4 @@
-//app\(tabs)\index.tsx
+// app/Planes/PlanesScreen.tsx
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -11,13 +11,14 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useAuth } from "../../src/presentation/hooks/useAuth";
+import { useAuth } from "@/src/presentation/hooks/useAuth";
 import { usePlanMovil } from "../../src/presentation/hooks/usePlanMovil";
-import { globalStyles } from "../../src/styles/globalStyles";
-import { colors, fontSize, spacing } from "../../src/styles/theme";
+
+import { globalStyles } from "@/src/styles/globalStyles";
+import { colors, fontSize, spacing } from "@/src/styles/theme";
 
 export default function PlanesScreen() {
-  const { usuario, logout } = useAuth();
+  const { usuario, cerrarSesion } = useAuth();
   const { planes, cargando, cargarPlanes, buscarPlan, eliminarPlan } = usePlanMovil();
   const [busqueda, setBusqueda] = useState("");
   const [refrescando, setRefrescando] = useState(false);
@@ -37,10 +38,10 @@ export default function PlanesScreen() {
     setRefrescando(false);
   };
 
-const handleCerrarSesion = async () => {
-  await logout();
-  router.replace("/auth/login");
-};
+  const handleCerrarSesion = async () => {
+    await cerrarSesion();
+    router.replace("/auth/login");
+  };
 
   const handleEliminar = (planId: string) => {
     Alert.alert(
@@ -90,7 +91,7 @@ const handleCerrarSesion = async () => {
 
       <TouchableOpacity
         style={[globalStyles.button, globalStyles.buttonPrimary, styles.botonCrear]}
-        onPress={() => router.push("/plan/crear")}
+        onPress={() => router.push("/planes/crear")}
       >
         <Text style={globalStyles.buttonText}>➕ Crear Plan</Text>
       </TouchableOpacity>
@@ -110,36 +111,29 @@ const handleCerrarSesion = async () => {
             <RefreshControl refreshing={refrescando} onRefresh={handleRefresh} />
           }
           ListEmptyComponent={
-            <Text style={globalStyles.emptyState}>No hay planes registrados</Text>
+            <Text style={globalStyles.emptyState}>
+              No hay planes móviles registrados.
+            </Text>
           }
           renderItem={({ item }) => (
             <View style={globalStyles.card}>
               <View style={styles.infoPlan}>
-                <Text style={styles.tituloPlan}>{item.nombre}</Text>
-                <Text style={globalStyles.textSecondary}>💰 {item.precio} USD</Text>
+                <Text style={styles.nombrePlan}>{item.nombre}</Text>
                 <Text style={globalStyles.textSecondary}>
-                  📶 Datos: {item.datos_gb} GB
+                  💲 {item.precio} - {item.descripcion}
                 </Text>
               </View>
 
               <View style={styles.botonesAccion}>
                 <TouchableOpacity
-                  style={[
-                    globalStyles.button,
-                    globalStyles.buttonSecondary,
-                    styles.botonAccion,
-                  ]}
-                  onPress={() => router.push(`/plan/editar?id=${item.id}`)}
+                  style={[globalStyles.button, globalStyles.buttonSecondary, styles.botonAccion]}
+                  onPress={() => router.push(`/planes/editar?id=${item.id}`)}
                 >
                   <Text style={globalStyles.buttonText}>✏️ Editar</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[
-                    globalStyles.button,
-                    globalStyles.buttonDanger,
-                    styles.botonAccion,
-                  ]}
+                  style={[globalStyles.button, globalStyles.buttonDanger, styles.botonAccion]}
                   onPress={() => handleEliminar(item.id)}
                 >
                   <Text style={globalStyles.buttonText}>🗑️ Eliminar</Text>
@@ -164,12 +158,12 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   botonCrear: {
-    margin: spacing.md,
+    marginVertical: spacing.md,
   },
   infoPlan: {
     paddingTop: spacing.md,
   },
-  tituloPlan: {
+  nombrePlan: {
     fontSize: fontSize.lg,
     fontWeight: "bold",
     color: colors.textPrimary,

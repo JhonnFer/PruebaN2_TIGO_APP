@@ -57,4 +57,23 @@ export class UsuarioRepositoryImpl implements UsuarioRepository {
 
     return usuario;
   }
+  async findByIdWithPerfil(usuarioid: string): Promise<Usuario | null> {
+  // Usando la view usuarios_con_rol
+  const { data, error } = await supabase
+    .from("usuarios_con_rol")
+    .select("*")
+    .eq("usuarioid", usuarioid)
+    .single();
+
+  if (error || !data) return null;
+
+  // data.rol ya viene como 'Asesor', 'Registrado' o 'Invitado'
+  return new Usuario(
+    data.usuarioid,
+    data.nombre,
+    data.email,
+    data.password,
+    data.rol // usamos rol en texto para redirección
+  );
+}
 }
