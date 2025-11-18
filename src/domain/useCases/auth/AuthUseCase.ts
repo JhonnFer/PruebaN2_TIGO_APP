@@ -1,12 +1,8 @@
+// src/domain/useCases/auth/AuthUseCase.ts
+
 import { Usuario } from "../../models/Usuario";
 import { supabase } from "@/src/data/services/supabaseClient";
-
-export interface UsuarioRepository {
-  findByEmail(email: string): Promise<Usuario | null>;
-  create(usuario: Usuario): Promise<Usuario>;
-}
-
-export type Role = "Asesor" | "Registrado" | "Invitado";
+import { UsuarioRepository, Role } from "@/src/domain/repositories/UsuarioRepository";
 
 export class AuthUseCase {
   constructor(private usuarioRepo: UsuarioRepository) {}
@@ -21,39 +17,36 @@ export class AuthUseCase {
   }
 
   /** Registro de usuario usando Supabase Auth y tabla usuarios */
-  async registrar(nombre: string, email: string, password: string, role: Role) {
-    const existe = await this.usuarioRepo.findByEmail(email);
-    if (existe) throw new Error("El correo ya está registrado");
+async registrar(nombre: string, email: string, password: string, telefono: string | undefined, role: Role) {
+  const existe = await this.usuarioRepo.findByEmail(email);
+  if (existe) throw new Error("El correo ya está registrado");
 
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email,
+    password,
+  });
+  if (authError) throw authError;
+
+  const userId = authData.user?.id;
+  if (!userId) throw new Error("No se pudo crear el usuario en Supabase");
+
+  const { data: userData, error: insertError } = await supabase
+    .from("usuarios")
+    .insert({
+      usuarioid: userId,
+      nombre,
       email,
       password,
-    });
-    if (authError) throw authError;
+      roleid: this.roleToId(role),
+      telefono: telefono || null
+    })
+    .select()
+    .single();
 
-    const userId = authData.user?.id;
-    if (!userId) throw new Error("No se pudo crear el usuario en Supabase");
+  if (insertError) throw insertError;
 
-    const { data: userData, error: insertError } = await supabase
-      .from("usuarios")
-      .insert({
-        usuarioid: userId,
-        nombre,
-        email,
-        password,
-        roleid: this.roleToId(role),
-      })
-      .select()
-      .single();
-
-    if (insertError) throw insertError;
-
-    const nuevoUsuario = new Usuario(userId, nombre, email, password, role);
-   
-
-    return nuevoUsuario;
-  }
-
+  return new Usuario(userId, nombre, email, password, role, telefono);
+}
   /** Login de usuario */
   async login(email: string, password: string) {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -71,9 +64,30 @@ export class AuthUseCase {
 
     if (userError) throw userError;
 
-    const roleMap: Record<number, Role> = { 1: "Asesor", 2: "Registrado", 3: "Invitado" };
+    const roleMap: Record<number, Role> = {
+      1: "Asesor",
+      2: "Registrado",
+      3: "Invitado",
+    };
     const role = roleMap[userData.roleid] || "Registrado";
 
     return new Usuario(data.user.id, userData.nombre, userData.email, password, role);
   }
+  /** Solicitar reset de contraseña usando Supabase Auth */
+  async solicitarReset(email: string) {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email);
+    if (error) throw new Error(error.message);
+    return data;
+  }
+
+  /** Confirmar reseteo de contraseña */
+  async confirmarReset(token: string, newPassword: string) {
+    const { data, error } = await supabase.auth.updateUser({
+      password: newPassword,
+      access_token: token,
+    });
+    if (error) throw new Error(error.message);
+    return data;
+  }
+
 }

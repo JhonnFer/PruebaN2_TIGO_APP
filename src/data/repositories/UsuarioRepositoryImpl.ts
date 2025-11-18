@@ -1,4 +1,6 @@
-import { UsuarioRepository, Role } from "@/src/domain/useCases/auth/AuthUseCase";
+//src\data\repositories\UsuarioRepositoryImpl.ts
+import { UsuarioRepository, Role } from "@/src/domain/repositories/UsuarioRepository";
+
 import { Usuario } from "@/src/domain/models/Usuario";
 import { supabase } from "@/src/data/services/supabaseClient";
 
@@ -12,13 +14,18 @@ export class UsuarioRepositoryImpl implements UsuarioRepository {
 
     if (error || !data) return null;
 
-    const roleMap: Record<number, Role> = { 1: "Asesor", 2: "Registrado", 3: "Invitado" };
+    const roleMap: Record<number, Role> = {
+      1: "Asesor",
+      2: "Registrado",
+      3: "Invitado",
+    };
 
     return new Usuario(
       data.usuarioid,
       data.nombre,
       data.email,
       data.password,
+      data.telefono,
       roleMap[data.roleid] || "Registrado"
     );
   }
@@ -31,7 +38,9 @@ export class UsuarioRepositoryImpl implements UsuarioRepository {
         nombre: usuario.nombre,
         email: usuario.email,
         password: usuario.password,
-        roleid: usuario.role === "Asesor" ? 1 : usuario.role === "Registrado" ? 2 : 3
+        telefono: usuario.telefono || null,
+        roleid:
+          usuario.role === "Asesor" ? 1 : usuario.role === "Registrado" ? 2 : 3,
       })
       .select()
       .single();
@@ -47,7 +56,9 @@ export class UsuarioRepositoryImpl implements UsuarioRepository {
       .update({
         nombre: usuario.nombre,
         password: usuario.password,
-        roleid: usuario.role === "Asesor" ? 1 : usuario.role === "Registrado" ? 2 : 3
+        telefono: usuario.telefono || null,
+        roleid:
+          usuario.role === "Asesor" ? 1 : usuario.role === "Registrado" ? 2 : 3,
       })
       .eq("usuarioid", usuario.usuarioid)
       .select()
@@ -58,22 +69,23 @@ export class UsuarioRepositoryImpl implements UsuarioRepository {
     return usuario;
   }
   async findByIdWithPerfil(usuarioid: string): Promise<Usuario | null> {
-  // Usando la view usuarios_con_rol
-  const { data, error } = await supabase
-    .from("usuarios_con_rol")
-    .select("*")
-    .eq("usuarioid", usuarioid)
-    .single();
+    // Usando la view usuarios_con_rol
+    const { data, error } = await supabase
+      .from("usuarios_con_rol")
+      .select("*")
+      .eq("usuarioid", usuarioid)
+      .single();
 
-  if (error || !data) return null;
+    if (error || !data) return null;
 
-  // data.rol ya viene como 'Asesor', 'Registrado' o 'Invitado'
-  return new Usuario(
-    data.usuarioid,
-    data.nombre,
-    data.email,
-    data.password,
-    data.rol // usamos rol en texto para redirección
-  );
-}
+    // data.rol ya viene como 'Asesor', 'Registrado' o 'Invitado'
+    return new Usuario(
+      data.usuarioid,
+      data.nombre,
+      data.email,
+      data.password,
+      data.rol // usamos rol en texto para redirección
+    );
+  }
+
 }

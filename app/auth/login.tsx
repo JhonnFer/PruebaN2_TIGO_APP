@@ -5,7 +5,7 @@ import { globalStyles } from "@/src/styles/globalStyles";
 import { useRouter } from "expo-router";
 
 export default function LoginScreen() {
-  const { login, loginInvitado, error, loading, usuario } = useAuth();
+  const { login, error, loading, usuario } = useAuth();
   const [email, setEmail] = useState("");
   const [contrasena, setContrasena] = useState("");
   const router = useRouter();
@@ -30,15 +30,23 @@ export default function LoginScreen() {
     }
   };
 
-  // ---------------------- Login Invitado ----------------------
-  const handleInvitado = () => {
-    const invitado = loginInvitado();
-    alert(`Bienvenido ${invitado.nombre} (Invitado)`);
-    router.replace("/explore");
-  };
-
   return (
     <View style={globalStyles.containerCentered}>
+      {/* ---------- Botón Volver ---------- */}
+      <TouchableOpacity
+        onPress={() => router.replace("/")}
+        style={{
+          position: "absolute",
+          top: 40,
+          left: 20,
+          padding: 10,
+          backgroundColor: "#CCC",
+          borderRadius: 8,
+        }}
+      >
+        <Text style={{ color: "#000", fontWeight: "600" }}>← Volver</Text>
+      </TouchableOpacity>
+
       <Text style={globalStyles.title}>Iniciar Sesión</Text>
 
       <TextInput
@@ -81,20 +89,14 @@ export default function LoginScreen() {
         </Text>
       </TouchableOpacity>
 
-      {/* Botón Login Invitado */}
-      <TouchableOpacity
-        style={[globalStyles.button, { width: "100%", backgroundColor: "#AAA", marginTop: 10 }]}
-        onPress={handleInvitado}
-      >
-        <Text style={globalStyles.buttonText}>Entrar como Invitado</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => router.push("/auth/registro")} style={{ marginTop: 15 }}>
+      {/* Enlace a recuperación de contraseña */}
+      <TouchableOpacity onPress={() => router.push("/auth/recuperar")} style={{ marginTop: 15 }}>
         <Text style={{ color: globalStyles.textPrimary.color, fontWeight: "600" }}>
-          ¿No tienes cuenta? Registrarse
+          ¿Olvidaste tu contraseña?
         </Text>
       </TouchableOpacity>
 
+      {/* Mostrar info de usuario activo */}
       {usuario && (
         <Text style={{ marginTop: 20, color: globalStyles.textPrimary.color }}>
           Usuario activo: {usuario.nombre} ({usuario.role})

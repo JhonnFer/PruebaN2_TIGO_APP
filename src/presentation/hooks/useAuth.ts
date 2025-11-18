@@ -4,7 +4,7 @@ import { AuthUseCase, Role } from "@/src/domain/useCases/auth/AuthUseCase";
 import { UsuarioRepositoryImpl } from "@/src/data/repositories/UsuarioRepositoryImpl";
 import { Usuario } from "@/src/domain/models/Usuario";
 import { supabase } from "@/src/data/services/supabaseClient";
-
+import { solicitarResetPassword, confirmarResetPassword } from "@/src/domain/useCases/auth/resetPasswordUseCase";
 const usuarioRepo = new UsuarioRepositoryImpl();
 const authUseCase = new AuthUseCase(usuarioRepo);
 
@@ -44,7 +44,7 @@ export const useAuth = () => {
   }, []);
 
   // ---------------------- Registro ----------------------
-  const registrar = async (nombre: string, email: string, password: string) => {
+  const registrar = async (nombre: string, email: string, password: string, telefono?: string) => {
     try {
       setLoading(true);
 
@@ -52,9 +52,11 @@ export const useAuth = () => {
       if (!email.includes("@")) throw new Error("Email inválido");
       if (password.length < 6)
         throw new Error("La contraseña debe tener al menos 6 caracteres");
+      if (telefono && telefono.length < 10)
+        throw new Error("El teléfono es inválido");
 
       const role: Role = "Registrado"; // Rol por defecto al registrarse
-      const nuevoUsuario = await authUseCase.registrar(nombre, email, password, role);
+      const nuevoUsuario = await authUseCase.registrar(nombre, email, password, telefono, role);
 
       setUsuario(nuevoUsuario);
       setError(null);
@@ -134,6 +136,27 @@ export const useAuth = () => {
     setError(null);
     if (router) router.replace("/auth/login");
   };
+const recuperarPassword = async (email: string) => {
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: "exp://127.0.0.1:19000/auth/password-update", // URL hacia tu app, ajusta si es necesario
+    });
 
-  return { usuario, loading, error, registrar, login, loginInvitado, logout };
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return "Correo de recuperación enviado";
+  } catch (e) {
+    throw e;
+  }
+};
+const solicitarReset = async (email: string) => {
+    return await solicitarResetPassword(email);
+  };
+
+  const confirmarReset = async (token: string, nuevaPass: string) => {
+    return await confirmarResetPassword(token, nuevaPass);
+  };
+  return { usuario, loading, error, registrar, login, loginInvitado, logout, recuperarPassword, solicitarReset, confirmarReset };
 };

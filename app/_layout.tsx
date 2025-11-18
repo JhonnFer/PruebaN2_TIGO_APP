@@ -11,15 +11,15 @@ export default function RootLayout() {
   useEffect(() => {
     if (loading) return;
 
-    const enAuth = segments[0] === "auth";
+    const inAuthSegment = segments[0] === "auth";
+    const inRootScreen = segments.length === 0; // Estamos en "/" (pantalla de bienvenida)
 
-    if (!usuario && !enAuth) {
-      setTimeout(() => router.replace("/auth/login"), 0);
-    } else if (usuario && enAuth) {
-      setTimeout(() => router.replace("/(tabs)"), 0);
+    if (!usuario && !inAuthSegment && !inRootScreen) {
+      setTimeout(() => router.replace("/"), 0); // Redirige a pantalla de bienvenida
+    } else if (usuario && inAuthSegment) {
+      setTimeout(() => router.replace("/(tabs)"), 0); // Si logueado, va a las tabs
     }
   }, [usuario, loading, segments]);
 
-  // Slot raíz: renderiza la ruta correspondiente
   return <Slot />;
 }

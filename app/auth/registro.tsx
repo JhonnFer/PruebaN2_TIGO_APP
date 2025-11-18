@@ -9,11 +9,12 @@ export default function RegistroScreen() {
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [contrasena, setContrasena] = useState(""); // variable interna, se envía como password
+  const [telefono, setTelefono] = useState(""); // nuevo campo para teléfono
   const router = useRouter();
 
   const handleRegistro = async () => {
     try {
-      await registrar(nombre, email, contrasena); // el hook maneja alerts
+      await registrar(nombre, email, contrasena, telefono); // el hook maneja alerts
 
       // Redirigir al login después del registro exitoso
       router.replace("/auth/login");
@@ -46,6 +47,13 @@ export default function RegistroScreen() {
         keyboardType="email-address"
         autoCapitalize="none"
       />
+      <TextInput
+  style={[globalStyles.input, { width: "100%" }]}
+  placeholder="Teléfono"
+  value={telefono}
+  onChangeText={setTelefono}
+  keyboardType="phone-pad"
+/>
 
       <TextInput
         style={[globalStyles.input, { width: "100%" }]}
