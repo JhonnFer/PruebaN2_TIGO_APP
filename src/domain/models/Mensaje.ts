@@ -1,15 +1,15 @@
 // src/domain/models/Mensaje.ts
 export interface Usuario {
-  id: string;
+  usuarioid: string;
   nombre: string;
   email: string;
 }
 
 export interface Mensaje {
-  id: string;
-  conversacion_id: string;
-  usuario_id: string;
-  contenido: string;
+  mensajeid: string;
+  destinatarioid: string; // Referencia al destinatario
+  usuarioid: string;
+  mensaje: string;
   leido: boolean;
   created_at: string;
   usuario?: Usuario;

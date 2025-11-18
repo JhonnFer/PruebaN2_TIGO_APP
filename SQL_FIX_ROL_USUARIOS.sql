@@ -1,12 +1,12 @@
 -- ============================================
--- FIX: POLÍTICAS RLS PARA TABLA USUARIOS
+-- FIX DEFINITIVO: POLÍTICAS RLS PARA USUARIOS
+-- Permite registro y auth correctamente
 -- ============================================
--- Este script arregla el error 42501 (RLS policy violation)
 
--- 1️⃣ DESACTIVAR RLS TEMPORALMENTE PARA LIMPIAR
+-- PASO 1: Deshabilitar RLS
 ALTER TABLE usuarios DISABLE ROW LEVEL SECURITY;
 
--- 2️⃣ ELIMINAR TODAS LAS POLÍTICAS ANTIGUAS
+-- PASO 2: Eliminar todas las políticas antiguas
 DROP POLICY IF EXISTS "Usuarios visibles para todos" ON usuarios;
 DROP POLICY IF EXISTS "Usuarios pueden crear su propio perfil" ON usuarios;
 DROP POLICY IF EXISTS "Usuarios pueden actualizar su propio perfil" ON usuarios;
@@ -16,38 +16,32 @@ DROP POLICY IF EXISTS "usuarios_select_all" ON usuarios;
 DROP POLICY IF EXISTS "usuarios_insert" ON usuarios;
 DROP POLICY IF EXISTS "usuarios_update" ON usuarios;
 DROP POLICY IF EXISTS "usuarios_delete" ON usuarios;
+DROP POLICY IF EXISTS "Usuarios ven su propio perfil" ON usuarios;
+DROP POLICY IF EXISTS "Permitir registro público" ON usuarios;
 
--- 3️⃣ LIMPIAR DATOS ANTIGUOS (OPCIONAL - comentar si quieres mantener datos)
--- DELETE FROM usuarios;
-
--- 4️⃣ VOLVER A HABILITAR RLS
+-- PASO 3: Volver a habilitar RLS
 ALTER TABLE usuarios ENABLE ROW LEVEL SECURITY;
 
--- 5️⃣ CREAR POLÍTICAS CORRECTAS
+-- PASO 4: Crear nuevas políticas
 
 -- POLÍTICA 1: Cualquiera puede VER todos los usuarios
-CREATE POLICY "usuarios_select_all"
+CREATE POLICY "usuarios_select_public"
   ON usuarios
   FOR SELECT
   USING (true);
 
--- POLÍTICA 2: Cualquier usuario autenticado puede INSERTAR su propio registro
--- SIN validación de auth.uid() porque la sesión podría no estar lista
-CREATE POLICY "usuarios_insert"
+-- POLÍTICA 2: Cualquiera puede INSERTAR (registro público)
+CREATE POLICY "usuarios_insert_public"
   ON usuarios
   FOR INSERT
   WITH CHECK (true);
 
--- POLÍTICA 3: Usuarios autenticados pueden ACTUALIZAR su propio perfil
-CREATE POLICY "usuarios_update"
+-- POLÍTICA 3: Solo actualizar propio perfil
+CREATE POLICY "usuarios_update_own"
   ON usuarios
   FOR UPDATE
-  USING (id = auth.uid())
-  WITH CHECK (id = auth.uid());
-
--- POLÍTICA 4: Usuarios autenticados pueden ELIMINAR su propio perfil
-CREATE POLICY "usuarios_delete"
-  ON usuarios
+  USING (usuarioid = auth.uid())
+  WITH CHECK (usuarioid = auth.uid());
   FOR DELETE
   USING (id = auth.uid());
 

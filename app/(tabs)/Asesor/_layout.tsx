@@ -72,7 +72,7 @@ export default function AsesorTabsLayout() {
             // Icono de Burbuja de Diálogo/Chat
             <Ionicons name="chatbubble-ellipses-outline" size={26} color={color} />
           ),
-        }}s 
+        }}
       />
       
       {/* 4. Perfil */}

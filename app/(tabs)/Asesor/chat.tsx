@@ -1,172 +1,311 @@
 // app/(tabs)/Asesor/chat.tsx
-import React, { useState, useEffect, useRef } from "react";
+import { useAuth } from "@/src/presentation/hooks/useAuth";
+import { useChat } from "@/src/presentation/hooks/useChat";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  View,
-  Text,
+  ActivityIndicator,
   FlatList,
-  TouchableOpacity,
-  TextInput,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { useChat } from "@/src/presentation/hooks/useChat";
 
-type Mensaje = {
-  id: string;
-  contenido: string;
-  created_at: string;
-  usuario_id: string;
-  usuario?: { id: string; nombre: string };
-};
+export default function ChatAsesorScreen() {
+  const { usuario } = useAuth();
+  const [destinatarioSeleccionado, setDestinatarioSeleccionado] = useState<string | null>(null);
+  const {
+    mensajes,
+    conversaciones,
+    cargando,
+    escribiendo,
+    enviarMensaje,
+  } = useChat(destinatarioSeleccionado || undefined);
 
-export default function ChatScreen() {
-  const router = useRouter();
-  const { conversaciones, mensajesPorConversacion, cargando, enviarMensaje } = useChat();
-  const [seleccionado, setSeleccionado] = useState<string | null>(null);
   const [texto, setTexto] = useState("");
   const flatRef = useRef<FlatList>(null);
 
   // Scroll al final al cambiar los mensajes
   useEffect(() => {
-    if (flatRef.current) {
+    if (flatRef.current && mensajes.length > 0) {
       flatRef.current.scrollToEnd({ animated: true });
     }
-  }, [mensajesPorConversacion, seleccionado]);
+  }, [mensajes]);
 
   if (cargando) {
-    return <ActivityIndicator size="large" style={{ marginTop: 50 }} />;
+    return (
+      <View style={styles.centrado}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
   }
 
-  // Pantalla de historial
-  if (!seleccionado) {
+  // Pantalla de historial de conversaciones
+  if (!destinatarioSeleccionado) {
     return (
-      <FlatList
-        data={conversaciones}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: 16 }}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              padding: 12,
-              borderBottomWidth: 1,
-              borderColor: "#eee",
-            }}
-            onPress={() => setSeleccionado(item.id)}
-          >
-            {/* Indicador online */}
-            <View
-              style={{
-                width: 12,
-                height: 12,
-                borderRadius: 6,
-                backgroundColor: "#007AFF",
-                marginRight: 12,
-              }}
-            />
-            <View>
-              <Text style={{ fontWeight: "600", fontSize: 16 }}>{item.usuario?.nombre}</Text>
-              <Text style={{ color: "#666" }}>{item.ultimoMensaje?.contenido || ""}</Text>
-            </View>
-          </TouchableOpacity>
+      <View style={styles.container}>
+        <Text style={styles.titulo}>Mis Conversaciones</Text>
+        {conversaciones.length === 0 ? (
+          <View style={styles.centrado}>
+            <Text style={styles.textoVacio}>
+              No hay conversaciones pendientes
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={conversaciones}
+            keyExtractor={(item) => item.destinatarioid}
+            contentContainerStyle={styles.lista}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.conversacionItem}
+                onPress={() => setDestinatarioSeleccionado(item.destinatarioid)}
+              >
+                <View
+                  style={{
+                    width: 12,
+                    height: 12,
+                    borderRadius: 6,
+                    backgroundColor: "#007AFF",
+                    marginRight: 12,
+                  }}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.nombreUsuario}>
+                    {item.usuario?.nombre || "Cliente"}
+                  </Text>
+                  <Text style={styles.ultimoMensaje} numberOfLines={1}>
+                    {item.mensaje || "Sin mensajes"}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
+          />
         )}
-      />
+      </View>
     );
   }
 
   // Pantalla de chat individual
-  const mensajes: Mensaje[] = mensajesPorConversacion[seleccionado] || [];
-
   const handleEnviar = async () => {
-    if (!texto.trim()) return;
-    await enviarMensaje(seleccionado, texto);
+    if (!texto.trim() || escribiendo) return;
+
+    const mensaje = texto;
     setTexto("");
+
+    try {
+      await enviarMensaje(mensaje);
+    } catch (error) {
+      console.error("Error enviando mensaje:", error);
+      alert("Error al enviar mensaje");
+      setTexto(mensaje);
+    }
   };
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: "#f5f5f5" }}
+      style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       {/* Header */}
-      <View style={{ padding: 16, backgroundColor: "#007AFF" }}>
-        <Text style={{ color: "#fff", fontWeight: "600", fontSize: 18 }}>
-          {conversaciones.find((c) => c.id === seleccionado)?.usuario?.nombre || "Chat"}
-        </Text>
-        <TouchableOpacity
-          style={{ position: "absolute", left: 16, top: 16 }}
-          onPress={() => setSeleccionado(null)}
-        >
-          <Text style={{ color: "#fff" }}>⬅ Volver</Text>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => setDestinatarioSeleccionado(null)}>
+          <Text style={styles.botonVolver}>← Volver</Text>
         </TouchableOpacity>
+        <Text style={styles.headerTitulo}>Chat</Text>
       </View>
 
+      {/* Mensajes */}
       <FlatList
         ref={flatRef}
         data={mensajes}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: 16 }}
+        keyExtractor={(item) => item.mensajeid}
+        contentContainerStyle={styles.mensajesContainer}
         renderItem={({ item }) => {
-          const esMio = item.usuario_id === "usuario_actual_id"; // reemplazar con id real
+          const esMio = item.usuarioid === usuario?.usuarioid;
+
           return (
             <View
-              style={{
-                alignSelf: esMio ? "flex-end" : "flex-start",
-                backgroundColor: esMio ? "#007AFF" : "#FFF",
-                padding: 12,
-                borderRadius: 12,
-                marginBottom: 8,
-                maxWidth: "75%",
-              }}
+              style={[
+                styles.mensajeContainer,
+                esMio ? styles.mensajeMio : styles.mensajeOtro,
+              ]}
             >
-              {!esMio && <Text style={{ fontWeight: "600", marginBottom: 4 }}>{item.usuario?.nombre}</Text>}
-              <Text style={{ color: esMio ? "#FFF" : "#000" }}>{item.contenido}</Text>
+              <Text style={[styles.contenidoMensaje, esMio && styles.textoMio]}>
+                {item.mensaje}
+              </Text>
               <Text
-                style={{
-                  fontSize: 10,
-                  color: esMio ? "rgba(255,255,255,0.7)" : "#999",
-                  alignSelf: "flex-end",
-                }}
+                style={[
+                  styles.horaMensaje,
+                  esMio && styles.horaTextoMio,
+                ]}
               >
-                {new Date(item.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                {new Date(item.created_at).toLocaleTimeString("es-ES", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </Text>
             </View>
           );
         }}
       />
 
-      <View
-        style={{
-          flexDirection: "row",
-          padding: 8,
-          borderTopWidth: 1,
-          borderColor: "#eee",
-          backgroundColor: "#fff",
-        }}
-      >
+      {/* Input */}
+      <View style={styles.inputContainer}>
         <TextInput
-          style={{
-            flex: 1,
-            borderWidth: 1,
-            borderColor: "#ccc",
-            borderRadius: 20,
-            padding: 8,
-            backgroundColor: "#f5f5f5",
-          }}
+          style={styles.input}
+          placeholder="Escribe un mensaje..."
+          placeholderTextColor="#999"
           value={texto}
           onChangeText={setTexto}
-          placeholder="Escribe un mensaje..."
+          multiline
+          maxLength={500}
         />
         <TouchableOpacity
+          style={[
+            styles.botonEnviar,
+            (escribiendo || !texto.trim()) && styles.botonDeshabilitado,
+          ]}
           onPress={handleEnviar}
-          style={{ marginLeft: 8, backgroundColor: "#007AFF", padding: 12, borderRadius: 20 }}
+          disabled={escribiendo || !texto.trim()}
         >
-          <Text style={{ color: "#fff" }}>Enviar</Text>
+          <Text style={styles.textoEnviar}>
+            {escribiendo ? "..." : "Enviar"}
+          </Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+  },
+  centrado: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  titulo: {
+    fontSize: 24,
+    fontWeight: "bold",
+    padding: 16,
+    color: "#333",
+  },
+  textoVacio: {
+    fontSize: 16,
+    color: "#999",
+  },
+  lista: {
+    paddingHorizontal: 8,
+  },
+  conversacionItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    marginHorizontal: 8,
+    marginVertical: 4,
+    backgroundColor: "#fff",
+    borderRadius: 8,
+  },
+  nombreUsuario: {
+    fontWeight: "600",
+    fontSize: 14,
+    color: "#333",
+  },
+  ultimoMensaje: {
+    fontSize: 12,
+    color: "#999",
+    marginTop: 4,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#007AFF",
+  },
+  botonVolver: {
+    fontSize: 16,
+    color: "#fff",
+    fontWeight: "600",
+  },
+  headerTitulo: {
+    flex: 1,
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#fff",
+    textAlign: "center",
+  },
+  mensajesContainer: {
+    paddingVertical: 8,
+  },
+  mensajeContainer: {
+    marginHorizontal: 12,
+    marginVertical: 4,
+    maxWidth: "80%",
+    padding: 10,
+    borderRadius: 12,
+  },
+  mensajeMio: {
+    alignSelf: "flex-end",
+    backgroundColor: "#007AFF",
+  },
+  mensajeOtro: {
+    alignSelf: "flex-start",
+    backgroundColor: "#ddd",
+  },
+  contenidoMensaje: {
+    fontSize: 14,
+    color: "#333",
+  },
+  textoMio: {
+    color: "#fff",
+  },
+  horaMensaje: {
+    fontSize: 10,
+    color: "#999",
+    marginTop: 4,
+  },
+  horaTextoMio: {
+    color: "rgba(255,255,255,0.7)",
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+  },
+  input: {
+    flex: 1,
+    marginRight: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 20,
+    fontSize: 14,
+    maxHeight: 100,
+  },
+  botonEnviar: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: "#007AFF",
+    borderRadius: 20,
+  },
+  botonDeshabilitado: {
+    backgroundColor: "#ccc",
+  },
+  textoEnviar: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+});

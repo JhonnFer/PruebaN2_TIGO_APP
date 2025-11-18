@@ -1,18 +1,17 @@
-import React, { useState } from "react";
-import { 
-  View, 
-  TextInput, 
-  Text, 
-  TouchableOpacity, 
-  StyleSheet, 
-  Platform,
-  ActivityIndicator
-} from "react-native";
 import { useAuth } from "@/src/presentation/hooks/useAuth";
 import { useRouter } from "expo-router";
+import React, { useState } from "react";
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from "react-native";
 
 const BUTTON_PRIMARY_BLUE = "#3498DB"; // Azul brillante
-const BORDER_GRAY = "#D1D5DB"; 
+const BORDER_GRAY = "#D1D5DB";
 const BACKGROUND_LAVENDER = "#AFAEC8";
 
 export default function RegistroScreen() {
@@ -131,32 +130,32 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#F9FAFB',
   },
-  button: { 
-    width: "100%", 
-    padding: 16, 
-    borderRadius: 8, 
-    alignItems: "center", 
-    marginTop: 10, 
-    minHeight: 55, 
+  button: {
+    width: "100%",
+    padding: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 10,
+    minHeight: 55,
     justifyContent: 'center',
     backgroundColor: BUTTON_PRIMARY_BLUE,
   },
-  buttonText: { 
-    color: "#fff", 
-    fontWeight: "bold", 
-    fontSize: 18, 
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 18,
   },
   buttonDisabled: {
-    backgroundColor: '#9CA3AF', 
+    backgroundColor: '#9CA3AF',
   },
-  error: { 
-    color: "#EF4444", 
-    marginBottom: 15, 
+  error: {
+    color: "#EF4444",
+    marginBottom: 15,
     fontWeight: '500',
   },
-  linkText: { 
-    color: BUTTON_PRIMARY_BLUE, 
-    fontWeight: "600", 
+  linkText: {
+    color: BUTTON_PRIMARY_BLUE,
+    fontWeight: "600",
     fontSize: 15,
     textAlign: 'center',
   },
