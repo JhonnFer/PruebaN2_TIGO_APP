@@ -1,46 +1,46 @@
+// app/auth/registro.tsx
 import React, { useState } from "react";
-import { View, TextInput, Text, TouchableOpacity } from "react-native";
+import { View, TextInput, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useAuth } from "@/src/presentation/hooks/useAuth";
-import { globalStyles } from "@/src/styles/globalStyles";
 import { useRouter } from "expo-router";
 
 export default function RegistroScreen() {
   const { registrar, error, loading } = useAuth();
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
-  const [contrasena, setContrasena] = useState(""); // variable interna, se envía como password
-  const [telefono, setTelefono] = useState(""); // nuevo campo para teléfono
+  const [contrasena, setContrasena] = useState("");
+  const [telefono, setTelefono] = useState("");
   const router = useRouter();
 
   const handleRegistro = async () => {
     try {
-      await registrar(nombre, email, contrasena, telefono); // el hook maneja alerts
+      await registrar(nombre, email, contrasena, telefono);
 
       // Redirigir al login después del registro exitoso
       router.replace("/auth/login");
 
-      // Opcional: limpiar inputs si quieres
+      // Limpiar inputs
       setNombre("");
       setEmail("");
       setContrasena("");
-    } catch (e) {
-      console.log("Error en handleRegistro:", e);
+      setTelefono("");
+    } catch (e: any) {
+      console.log("Error en handleRegistro:", e.message);
     }
   };
 
   return (
-    <View style={globalStyles.containerCentered}>
-      <Text style={globalStyles.title}>Registro</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Registro</Text>
 
       <TextInput
-        style={[globalStyles.input, { width: "100%" }]}
+        style={styles.input}
         placeholder="Nombre"
         value={nombre}
         onChangeText={setNombre}
       />
-
       <TextInput
-        style={[globalStyles.input, { width: "100%" }]}
+        style={styles.input}
         placeholder="Email"
         value={email}
         onChangeText={setEmail}
@@ -48,33 +48,28 @@ export default function RegistroScreen() {
         autoCapitalize="none"
       />
       <TextInput
-  style={[globalStyles.input, { width: "100%" }]}
-  placeholder="Teléfono"
-  value={telefono}
-  onChangeText={setTelefono}
-  keyboardType="phone-pad"
-/>
-
+        style={styles.input}
+        placeholder="Teléfono"
+        value={telefono}
+        onChangeText={setTelefono}
+        keyboardType="phone-pad"
+      />
       <TextInput
-        style={[globalStyles.input, { width: "100%" }]}
+        style={styles.input}
         placeholder="Contraseña"
         value={contrasena}
         onChangeText={setContrasena}
         secureTextEntry
       />
 
-      {error && <Text style={{ color: "red", marginBottom: 10 }}>{error}</Text>}
+      {error && <Text style={styles.error}>{error}</Text>}
 
       <TouchableOpacity
-        style={[
-          globalStyles.button,
-          globalStyles.buttonPrimary,
-          { width: "100%", opacity: loading ? 0.7 : 1 },
-        ]}
+        style={[styles.button, loading && { opacity: 0.7 }]}
         onPress={handleRegistro}
         disabled={loading}
       >
-        <Text style={globalStyles.buttonText}>
+        <Text style={styles.buttonText}>
           {loading ? "Registrando..." : "Registrar"}
         </Text>
       </TouchableOpacity>
@@ -83,10 +78,33 @@ export default function RegistroScreen() {
         onPress={() => router.push("/auth/login")}
         style={{ marginTop: 15 }}
       >
-        <Text style={{ color: globalStyles.textPrimary.color, fontWeight: "600" }}>
+        <Text style={styles.linkText}>
           ¿Ya tienes cuenta? Iniciar sesión
         </Text>
       </TouchableOpacity>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, justifyContent: "center", alignItems: "center", padding: 16 },
+  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
+  input: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+  },
+  button: {
+    width: "100%",
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: "#2196F3",
+    alignItems: "center",
+  },
+  buttonText: { color: "#fff", fontWeight: "600", fontSize: 16 },
+  error: { color: "red", marginBottom: 10 },
+  linkText: { color: "#2196F3", fontWeight: "600", fontSize: 14 },
+});

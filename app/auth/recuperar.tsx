@@ -1,8 +1,7 @@
 // app/auth/recuperar.tsx
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import { globalStyles } from "@/src/styles/globalStyles";
 import { useAuth } from "@/src/presentation/hooks/useAuth";
 
 export default function RecuperarPasswordScreen() {
@@ -28,29 +27,22 @@ export default function RecuperarPasswordScreen() {
   };
 
   return (
-    <View style={globalStyles.containerCentered}>
-      {/* ---------- Botón Volver ---------- */}
+    <View style={styles.container}>
+      {/* Botón Volver */}
       <TouchableOpacity
         onPress={() => router.replace("/auth/login")}
-        style={{
-          position: "absolute",
-          top: 40,
-          left: 20,
-          padding: 10,
-          backgroundColor: "#CCC",
-          borderRadius: 8,
-        }}
+        style={styles.backButton}
       >
-        <Text style={{ color: "#000", fontWeight: "600" }}>← Volver</Text>
+        <Text style={styles.backText}>← Volver</Text>
       </TouchableOpacity>
 
-      <Text style={globalStyles.title}>Recuperar Contraseña</Text>
-      <Text style={{ ...globalStyles.subtitle, marginBottom: 20 }}>
+      <Text style={styles.title}>Recuperar Contraseña</Text>
+      <Text style={styles.subtitle}>
         Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
       </Text>
 
       <TextInput
-        style={[globalStyles.input, { width: "100%" }]}
+        style={styles.input}
         placeholder="Correo electrónico"
         value={email}
         onChangeText={setEmail}
@@ -59,14 +51,25 @@ export default function RecuperarPasswordScreen() {
       />
 
       <TouchableOpacity
-        style={[globalStyles.button, globalStyles.buttonPrimary, { width: "100%", marginTop: 15 }]}
+        style={styles.button}
         onPress={handleRecuperar}
         disabled={loading}
       >
-        <Text style={globalStyles.buttonText}>
+        <Text style={styles.buttonText}>
           {loading ? "Enviando..." : "Enviar Instrucciones"}
         </Text>
       </TouchableOpacity>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, justifyContent: "center", alignItems: "center", padding: 16 },
+  backButton: { position: "absolute", top: 40, left: 20, padding: 10, backgroundColor: "#CCC", borderRadius: 8 },
+  backText: { color: "#000", fontWeight: "600" },
+  title: { fontSize: 24, fontWeight: "bold", marginBottom: 12, textAlign: "center" },
+  subtitle: { fontSize: 16, color: "#555", textAlign: "center", marginBottom: 20 },
+  input: { width: "100%", borderWidth: 1, borderColor: "#ccc", borderRadius: 8, padding: 10, marginBottom: 15 },
+  button: { width: "100%", padding: 12, borderRadius: 10, backgroundColor: "#4CAF50", alignItems: "center" },
+  buttonText: { color: "#fff", fontWeight: "600", fontSize: 16 },
+});

@@ -1,17 +1,14 @@
-import React from "react";
-import { View, StatusBar } from "react-native";
+// app/_layout.tsx
 import { Stack } from "expo-router";
-import { globalStyles } from "../src/styles/globalStyles";
+import React from "react";
 
-export default function AppLayout() {
+export default function RootLayout() {
   return (
-    <View style={globalStyles.container}>
-      <StatusBar barStyle="dark-content" />
-      <Stack
-        screenOptions={{
-          headerShown: false, // ocultamos el header global
-        }}
-      />
-    </View>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: "#f5f5f5" },
+      }}
+    />
   );
 }

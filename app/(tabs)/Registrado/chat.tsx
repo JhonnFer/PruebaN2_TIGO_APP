@@ -1,3 +1,4 @@
+//app/(tabs)/Registrado/chat.tsx
 import React, { useState, useRef, useEffect } from "react";
 import {
   View,

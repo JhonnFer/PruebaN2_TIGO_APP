@@ -198,7 +198,7 @@ export const globalStyles = StyleSheet.create({
     borderRadius: borderRadius.md,
     paddingHorizontal: 12,
     height: 40,
-    elevation: 3,
+  
     ...shadows.small,
   },
 

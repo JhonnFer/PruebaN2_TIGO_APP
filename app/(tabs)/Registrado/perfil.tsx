@@ -1,3 +1,4 @@
+//app/(tabs)/Registrado/perfil.tsx
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useAuth } from "@/src/presentation/hooks/useAuth";
