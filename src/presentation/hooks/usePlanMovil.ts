@@ -15,7 +15,7 @@ export function usePlanMovil() {
 
   // --- Cargar todos los planes según rol ---
   const cargarPlanes = useCallback(async () => {
-    if (!puedeVerCatalogo) return;
+    if (!puedeVerCatalogo || !usuario) return;
 
     try {
       setCargando(true);
@@ -23,9 +23,9 @@ export function usePlanMovil() {
 
       let query = supabase.from("planes_moviles").select("*");
 
-      // Filtro según rol
-      if (usuario?.role === "usuario_registrado" || usuario?.role === "invitado") {
-        query = query.eq("activo", true); // solo planes activos
+      // Solo planes activos para usuarios registrados o invitados
+      if (usuario.role === "Registrado" || usuario.role === "Invitado") {
+        query = query.eq("activo", true);
       }
 
       const { data, error } = await query;
@@ -42,7 +42,7 @@ export function usePlanMovil() {
 
   // --- Buscar plan por nombre ---
   const buscarPlan = useCallback(async (termino: string) => {
-    if (!puedeVerCatalogo) return;
+    if (!puedeVerCatalogo || !usuario) return;
 
     try {
       setCargando(true);
@@ -52,7 +52,7 @@ export function usePlanMovil() {
         .select("*")
         .ilike("nombre", `%${termino}%`);
 
-      if (usuario?.role === "usuario_registrado" || usuario?.role === "invitado") {
+      if (usuario.role === "Registrado" || usuario.role === "Invitado") {
         query = query.eq("activo", true);
       }
 
@@ -73,14 +73,19 @@ export function usePlanMovil() {
     return planes.find(p => p.planid === planid) || null;
   };
 
-  // --- Contratar plan (solo usuario registrado) ---
+  // --- Contratar plan ---
   const contratarPlan = async (planid: string) => {
-    if (usuario?.role !== "usuario_registrado") throw new Error("No autorizado");
+    if (!usuario || usuario.role !== "Registrado") throw new Error("No autorizado");
 
     try {
       const { data, error } = await supabase
         .from("contrataciones")
-        .insert([{ planid, userid: usuario.id, estado: "PENDIENTE", fecha: new Date().toISOString() }]);
+        .insert([{
+          planid,
+          usuarioid: usuario.usuarioid, // ✅ usar usuarioid
+          estado: "PENDIENTE",
+          fecha: new Date().toISOString()
+        }]);
 
       if (error) throw new Error(error.message);
 
@@ -101,23 +106,23 @@ export function usePlanMovil() {
 
   // --- Cargar planes contratados del usuario ---
   const cargarPlanesContratados = useCallback(async () => {
-    if (!usuario || usuario.role !== "usuario_registrado") return;
+    if (!usuario || usuario.role !== "Registrado") return;
 
     try {
       const { data, error } = await supabase
         .from("contrataciones")
         .select("*, planes_moviles(*)")
-        .eq("userid", usuario.id);
+        .eq("usuarioid", usuario.usuarioid); // ✅ usar usuarioid
 
       if (error) throw new Error(error.message);
 
-      // Mapeo para tener datos planos
       const contratados = (data || []).map((c: any) => ({
         planid: c.planid,
         nombre: c.planes_moviles.nombre,
         descripcion: c.planes_moviles.descripcion,
         gigas: c.planes_moviles.gigas,
         minutos: c.planes_moviles.minutos,
+        promocion: c.planes_moviles.promocion,
         precio: c.planes_moviles.precio,
         estado: c.estado,
         fecha: c.fecha,
@@ -135,6 +140,7 @@ export function usePlanMovil() {
     cargarPlanesContratados();
   }, [cargarPlanes, cargarPlanesContratados]);
 
+  // --- Eliminar plan (solo asesores) ---
   const eliminarPlan = async (planId: string) => {
     if (!puedeEliminar) return { success: false, error: "No tienes permisos" };
 

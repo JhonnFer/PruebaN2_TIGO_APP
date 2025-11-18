@@ -1,15 +1,24 @@
-// app/(tabs)/Registrado/index.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, FlatList, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { usePlanMovil } from "../../../src/presentation/hooks/usePlanMovil";
 import { usePermisos } from "../../../src/presentation/hooks/usePermisos";
+import { useAuth } from "../../../src/presentation/hooks/useAuth";
 
 export default function CatalogoPlanes() {
   const router = useRouter();
+  const { usuario } = useAuth();
   const { planes, cargando, error, buscarPlan } = usePlanMovil();
   const { puedeVerCatalogo } = usePermisos();
   const [searchTerm, setSearchTerm] = useState("");
+
+  if (!usuario) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   if (!puedeVerCatalogo) {
     return (
@@ -39,7 +48,6 @@ export default function CatalogoPlanes() {
 
   return (
     <View style={styles.container}>
-      {/* Search */}
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -58,6 +66,8 @@ export default function CatalogoPlanes() {
         <ActivityIndicator size="large" style={{ marginTop: 50 }} />
       ) : error ? (
         <Text style={{ color: "red", textAlign: "center" }}>{error}</Text>
+      ) : planes.length === 0 ? (
+        <Text style={{ textAlign: "center", marginTop: 50 }}>No hay planes disponibles</Text>
       ) : (
         <FlatList
           data={planes}

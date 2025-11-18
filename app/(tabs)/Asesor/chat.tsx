@@ -1,216 +1,172 @@
-import React, { useState, useRef, useEffect } from "react";
+// app/(tabs)/Asesor/chat.tsx
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
-  TextInput,
   FlatList,
   TouchableOpacity,
+  TextInput,
   KeyboardAvoidingView,
   Platform,
-  StyleSheet,
   ActivityIndicator,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { useChat } from "@/src/presentation/hooks/useChat";
-import { useAuth } from "@/src/presentation/hooks/useAuth";
-import { Mensaje } from "@/src/domain/models/Mensaje";
+
+type Mensaje = {
+  id: string;
+  contenido: string;
+  created_at: string;
+  usuario_id: string;
+  usuario?: { id: string; nombre: string };
+};
 
 export default function ChatScreen() {
-  const { mensajes, cargando, enviando, enviarMensaje } = useChat();
-  const { usuario } = useAuth();
-  const [textoMensaje, setTextoMensaje] = useState("");
-  const flatListRef = useRef<FlatList>(null);
+  const router = useRouter();
+  const { conversaciones, mensajesPorConversacion, cargando, enviarMensaje } = useChat();
+  const [seleccionado, setSeleccionado] = useState<string | null>(null);
+  const [texto, setTexto] = useState("");
+  const flatRef = useRef<FlatList>(null);
 
-  // Auto-scroll al final cuando llegan nuevos mensajes
+  // Scroll al final al cambiar los mensajes
   useEffect(() => {
-    if (mensajes.length > 0) {
-      flatListRef.current?.scrollToEnd({ animated: true });
+    if (flatRef.current) {
+      flatRef.current.scrollToEnd({ animated: true });
     }
-  }, [mensajes]);
-
-  const handleEnviar = async () => {
-    if (!textoMensaje.trim() || enviando) return;
-
-    const mensaje = textoMensaje;
-    setTextoMensaje(""); // Limpiar input inmediatamente
-
-    const resultado = await enviarMensaje(mensaje);
-
-    if (!resultado.success) {
-      alert("Error: " + resultado.error);
-      setTextoMensaje(mensaje); // Restaurar mensaje si falló
-    }
-  };
-
-  const renderMensaje = ({ item }: { item: Mensaje }) => {
-    const esMio = item.usuario_id === usuario?.id;
-    const emailUsuario = item.usuario?.email || "Usuario desconocido";
-
-    return (
-      <View
-        style={[
-          styles.mensajeContainer,
-          esMio ? styles.mensajeMio : styles.mensajeOtro,
-        ]}
-      >
-        {!esMio && (
-          <Text style={styles.nombreUsuario}>{emailUsuario}</Text>
-        )}
-        <Text style={[
-          styles.contenidoMensaje,
-          esMio && styles.contenidoMensajeMio
-        ]}>
-          {item.contenido}
-        </Text>
-        <Text style={[
-          styles.horaMensaje,
-          esMio && styles.horaMensajeMio
-        ]}>
-          {new Date(item.created_at).toLocaleTimeString('es-ES', {
-            hour: '2-digit',
-            minute: '2-digit'
-          })}
-        </Text>
-      </View>
-    );
-  };
+  }, [mensajesPorConversacion, seleccionado]);
 
   if (cargando) {
+    return <ActivityIndicator size="large" style={{ marginTop: 50 }} />;
+  }
+
+  // Pantalla de historial
+  if (!seleccionado) {
     return (
-      <View style={styles.centrado}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.textoCargando}>Cargando mensajes...</Text>
-      </View>
+      <FlatList
+        data={conversaciones}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ padding: 16 }}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              padding: 12,
+              borderBottomWidth: 1,
+              borderColor: "#eee",
+            }}
+            onPress={() => setSeleccionado(item.id)}
+          >
+            {/* Indicador online */}
+            <View
+              style={{
+                width: 12,
+                height: 12,
+                borderRadius: 6,
+                backgroundColor: "#007AFF",
+                marginRight: 12,
+              }}
+            />
+            <View>
+              <Text style={{ fontWeight: "600", fontSize: 16 }}>{item.usuario?.nombre}</Text>
+              <Text style={{ color: "#666" }}>{item.ultimoMensaje?.contenido || ""}</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+      />
     );
   }
 
+  // Pantalla de chat individual
+  const mensajes: Mensaje[] = mensajesPorConversacion[seleccionado] || [];
+
+  const handleEnviar = async () => {
+    if (!texto.trim()) return;
+    await enviarMensaje(seleccionado, texto);
+    setTexto("");
+  };
+
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={{ flex: 1, backgroundColor: "#f5f5f5" }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={100}
     >
+      {/* Header */}
+      <View style={{ padding: 16, backgroundColor: "#007AFF" }}>
+        <Text style={{ color: "#fff", fontWeight: "600", fontSize: 18 }}>
+          {conversaciones.find((c) => c.id === seleccionado)?.usuario?.nombre || "Chat"}
+        </Text>
+        <TouchableOpacity
+          style={{ position: "absolute", left: 16, top: 16 }}
+          onPress={() => setSeleccionado(null)}
+        >
+          <Text style={{ color: "#fff" }}>⬅ Volver</Text>
+        </TouchableOpacity>
+      </View>
+
       <FlatList
-        ref={flatListRef}
+        ref={flatRef}
         data={mensajes}
-        renderItem={renderMensaje}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-        onContentSizeChange={() => flatListRef.current?.scrollToEnd()}
+        contentContainerStyle={{ padding: 16 }}
+        renderItem={({ item }) => {
+          const esMio = item.usuario_id === "usuario_actual_id"; // reemplazar con id real
+          return (
+            <View
+              style={{
+                alignSelf: esMio ? "flex-end" : "flex-start",
+                backgroundColor: esMio ? "#007AFF" : "#FFF",
+                padding: 12,
+                borderRadius: 12,
+                marginBottom: 8,
+                maxWidth: "75%",
+              }}
+            >
+              {!esMio && <Text style={{ fontWeight: "600", marginBottom: 4 }}>{item.usuario?.nombre}</Text>}
+              <Text style={{ color: esMio ? "#FFF" : "#000" }}>{item.contenido}</Text>
+              <Text
+                style={{
+                  fontSize: 10,
+                  color: esMio ? "rgba(255,255,255,0.7)" : "#999",
+                  alignSelf: "flex-end",
+                }}
+              >
+                {new Date(item.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </Text>
+            </View>
+          );
+        }}
       />
 
-      <View style={styles.inputContainer}>
+      <View
+        style={{
+          flexDirection: "row",
+          padding: 8,
+          borderTopWidth: 1,
+          borderColor: "#eee",
+          backgroundColor: "#fff",
+        }}
+      >
         <TextInput
-          style={styles.input}
-          value={textoMensaje}
-          onChangeText={setTextoMensaje}
+          style={{
+            flex: 1,
+            borderWidth: 1,
+            borderColor: "#ccc",
+            borderRadius: 20,
+            padding: 8,
+            backgroundColor: "#f5f5f5",
+          }}
+          value={texto}
+          onChangeText={setTexto}
           placeholder="Escribe un mensaje..."
-          multiline
-          maxLength={500}
         />
         <TouchableOpacity
-          style={[
-            styles.botonEnviar,
-            (!textoMensaje.trim() || enviando) && styles.botonDeshabilitado,
-          ]}
           onPress={handleEnviar}
-          disabled={!textoMensaje.trim() || enviando}
+          style={{ marginLeft: 8, backgroundColor: "#007AFF", padding: 12, borderRadius: 20 }}
         >
-          <Text style={styles.textoBotonEnviar}>
-            {enviando ? "..." : "Enviar"}
-          </Text>
+          <Text style={{ color: "#fff" }}>Enviar</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F5F5F5",
-  },
-  centrado: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  textoCargando: {
-    marginTop: 10,
-    fontSize: 16,
-    color: "#666",
-  },
-  listContainer: {
-    padding: 16,
-  },
-  mensajeContainer: {
-    maxWidth: "75%",
-    padding: 12,
-    borderRadius: 16,
-    marginBottom: 8,
-  },
-  mensajeMio: {
-    alignSelf: "flex-end",
-    backgroundColor: "#007AFF",
-  },
-  mensajeOtro: {
-    alignSelf: "flex-start",
-    backgroundColor: "#FFF",
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
-  },
-  nombreUsuario: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#666",
-    marginBottom: 4,
-  },
-  contenidoMensaje: {
-    fontSize: 16,
-    color: "#000",
-  },
-  contenidoMensajeMio: {
-    color: "#FFF",
-  },
-  horaMensaje: {
-    fontSize: 10,
-    color: "#999",
-    marginTop: 4,
-    alignSelf: "flex-end",
-  },
-  horaMensajeMio: {
-    color: "rgba(255, 255, 255, 0.7)",
-  },
-  inputContainer: {
-    flexDirection: "row",
-    padding: 12,
-    backgroundColor: "#FFF",
-    borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
-  },
-  input: {
-    flex: 1,
-    minHeight: 40,
-    maxHeight: 100,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: "#F5F5F5",
-    borderRadius: 20,
-    fontSize: 16,
-  },
-  botonEnviar: {
-    marginLeft: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    backgroundColor: "#007AFF",
-    borderRadius: 20,
-    justifyContent: "center",
-  },
-  botonDeshabilitado: {
-    backgroundColor: "#CCC",
-  },
-  textoBotonEnviar: {
-    color: "#FFF",
-    fontWeight: "600",
-    fontSize: 16,
-  },
-});

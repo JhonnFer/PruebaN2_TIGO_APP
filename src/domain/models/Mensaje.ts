@@ -1,11 +1,16 @@
+// src/domain/models/Mensaje.ts
+export interface Usuario {
+  id: string;
+  nombre: string;
+  email: string;
+}
+
 export interface Mensaje {
   id: string;
-  contenido: string;
+  conversacion_id: string;
   usuario_id: string;
+  contenido: string;
+  leido: boolean;
   created_at: string;
-  // Información del usuario (join)
-  usuario?: {
-    email: string;
-    rol: string;
-  };
+  usuario?: Usuario;
 }
