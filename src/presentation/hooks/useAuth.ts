@@ -1,91 +1,76 @@
-import { useEffect, useState } from "react";
-import { Usuario } from "../../domain/models/Usuario";
-import { AuthUseCase } from "../../domain/useCases/auth/AuthUseCase";
+import { useState } from "react";
+import { Alert } from "react-native";
+import { AuthUseCase, Role } from "@/src/domain/useCases/auth/AuthUseCase";
+import { UsuarioRepositoryImpl } from "@/src/data/repositories/UsuarioRepositoryImpl";
+import { Usuario } from "@/src/domain/models/Usuario";
 
-// Crear UNA SOLA instancia del UseCase
-// Esto es importante para no crear múltiples suscripciones
-const authUseCase = new AuthUseCase();
+const usuarioRepo = new UsuarioRepositoryImpl();
+const authUseCase = new AuthUseCase(usuarioRepo);
 
-/**
- * useAuth - Hook de Autenticación
- *
- * Este hook es el puente entre la UI y la lógica de negocio.
- * Maneja el estado de autenticación de forma reactiva.
- *
- * ESTADOS:
- * - usuario: Usuario actual o null
- * - cargando: true mientras verifica sesión inicial
- *
- * MÉTODOS:
- * - registrar: Crear nuevo usuario
- * - iniciarSesion: Login
- * - cerrarSesion: Logout
- *
- * HELPERS:
- * - esChef: Boolean para validaciones rápidas
- */
-export function useAuth() {
+export const useAuth = () => {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
-  const [cargando, setCargando] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // AL MONTAR: Verificar si hay sesión activa
-    verificarSesion();
+  const registrar = async (nombre: string, email: string, password: string) => {
+    try {
+      setLoading(true);
 
-    // SUSCRIBIRSE: Escuchar cambios de autenticación
-    const { data: subscription } = authUseCase.onAuthStateChange((user) => {
-      setUsuario(user);
-      setCargando(false);
-    });
+      if (!nombre.trim()) throw new Error("El nombre es obligatorio");
+      if (!email.includes("@")) throw new Error("Email inválido");
+      if (password.length < 6) throw new Error("La contraseña debe tener al menos 6 caracteres");
 
-    // LIMPIAR: Cancelar suscripción al desmontar
-    return () => {
-      subscription.subscription.unsubscribe();
-    };
-  }, []);
+      const role: Role = "Registrado";
+      const nuevoUsuario = await authUseCase.registrar(nombre, email, password, role);
 
-  /**
-   * Verificar sesión actual
-   */
-  const verificarSesion = async () => {
-    const user = await authUseCase.obtenerUsuarioActual();
-    setUsuario(user);
-    setCargando(false);
+      setUsuario(nuevoUsuario);
+      setError(null);
+
+      Alert.alert(
+        "Registro exitoso",
+        `Usuario registrado: ${nuevoUsuario.nombre}\nConfirma tu correo antes de iniciar sesión.`
+      );
+
+      return nuevoUsuario;
+    } catch (e: any) {
+      if (e.status === 400 || e.message.includes("already registered")) {
+        Alert.alert("Error", "El correo ya está registrado");
+      } else {
+        Alert.alert("Error", e.message || "Ocurrió un error inesperado");
+      }
+      setError(e.message);
+      throw e;
+    } finally {
+      setLoading(false);
+    }
   };
 
-  /**
-   * Registrar nuevo usuario
-   */
-  const registrar = async (
-    email: string,
-    password: string,
-    rol: "chef" | "usuario"
-  ) => {
-    return await authUseCase.registrar(email, password, rol);
+  const login = async (email: string, password: string) => {
+    try {
+      setLoading(true);
+
+      if (!email.includes("@")) throw new Error("Email inválido");
+      if (!password) throw new Error("La contraseña es obligatoria");
+
+      const loggedUser = await authUseCase.login(email, password);
+
+      setUsuario(loggedUser);
+      setError(null);
+
+      return loggedUser;
+    } catch (e: any) {
+      setError(e.message);
+      Alert.alert("Error", e.message || "Ocurrió un error inesperado");
+      throw e;
+    } finally {
+      setLoading(false);
+    }
   };
 
-  /**
-   * Iniciar sesión
-   */
-  const iniciarSesion = async (email: string, password: string) => {
-    return await authUseCase.iniciarSesion(email, password);
+  const logout = () => {
+    setUsuario(null);
+    setError(null);
   };
 
-  /**
-   * Cerrar sesión
-   */
-  const cerrarSesion = async () => {
-    return await authUseCase.cerrarSesion();
-  };
-
-  // Retornar estado y métodos
-  return {
-    usuario,              // Usuario actual o null
-    cargando,            // Boolean de carga
-    registrar,           // Función
-    iniciarSesion,       // Función
-    cerrarSesion,        // Función
-    esChef: usuario?.rol === "chef", // Helper
-  };
-}
-
+  return { usuario, loading, error, registrar, login, logout };
+};

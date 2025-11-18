@@ -1,178 +1,84 @@
-import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { useAuth } from "../../src/presentation/hooks/useAuth";
-import { globalStyles } from "../../src/styles/globalStyles";
-import {
-  borderRadius,
-  colors,
-  fontSize,
-  spacing,
-} from "../../src/styles/theme";
+import { View, TextInput, Text, TouchableOpacity } from "react-native";
+import { useAuth } from "@/src/presentation/hooks/useAuth";
+import { globalStyles } from "@/src/styles/globalStyles";
+import { useRouter } from "expo-router";
 
 export default function RegistroScreen() {
+  const { registrar, error, loading } = useAuth();
+  const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rolSeleccionado, setRolSeleccionado] = useState<"entrenador" | "usuario">(
-    "usuario" // Por defecto: usuario
-  );
-  const [cargando, setCargando] = useState(false);
-  const { registrar } = useAuth();
+  const [contrasena, setContrasena] = useState(""); // variable interna, se envía como password
   const router = useRouter();
 
   const handleRegistro = async () => {
-    console.log("Rol seleccionado antes de registrar:", rolSeleccionado);
+    try {
+      await registrar(nombre, email, contrasena); // el hook maneja alerts
 
-    if (!email || !password) {
-      Alert.alert("Error", "Completa todos los campos");
-      return;
-    }
+      // Redirigir al login después del registro exitoso
+      router.replace("/auth/login");
 
-    if (password.length < 6) {
-      Alert.alert("Error", "La contraseña debe tener al menos 6 caracteres");
-      return;
-    }
-
-    setCargando(true);
-    const resultado = await registrar(email, password, rolSeleccionado);
-    setCargando(false);
-
-    if (resultado.success) {
-      Alert.alert("Éxito", "Cuenta creada correctamente", [
-        { text: "OK", onPress: () => router.replace("/auth/login") },
-      ]);
-    } else {
-      Alert.alert("Error", resultado.error || "No se pudo crear la cuenta");
+      // Opcional: limpiar inputs si quieres
+      setNombre("");
+      setEmail("");
+      setContrasena("");
+    } catch (e) {
+      console.log("Error en handleRegistro:", e);
     }
   };
 
   return (
-    <View style={globalStyles.container}>
-      <View style={globalStyles.contentPadding}>
-        <Text style={globalStyles.title}>Crear Cuenta</Text>
+    <View style={globalStyles.containerCentered}>
+      <Text style={globalStyles.title}>Registro</Text>
 
-        <TextInput
-          style={globalStyles.input}
-          placeholder="Correo electrónico"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
+      <TextInput
+        style={[globalStyles.input, { width: "100%" }]}
+        placeholder="Nombre"
+        value={nombre}
+        onChangeText={setNombre}
+      />
 
-        <TextInput
-          style={globalStyles.input}
-          placeholder="Contraseña (mínimo 6 caracteres)"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+      <TextInput
+        style={[globalStyles.input, { width: "100%" }]}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
 
-        {/* SELECTOR DE ROL */}
-        <Text style={styles.labelRol}>Selecciona tu rol:</Text>
-        <View style={styles.contenedorRoles}>
-          {/* BOTÓN: Usuario */}
-          <TouchableOpacity
-            style={[
-              styles.botonRol,
-              rolSeleccionado === "usuario" && styles.botonRolActivo,
-            ]}
-            onPress={() => setRolSeleccionado("usuario")}
-          >
-            <Text
-              style={[
-                styles.textoRol,
-                rolSeleccionado === "usuario" && styles.textoRolActivo,
-              ]}
-            >
-              Usuario
-            </Text>
-          </TouchableOpacity>
+      <TextInput
+        style={[globalStyles.input, { width: "100%" }]}
+        placeholder="Contraseña"
+        value={contrasena}
+        onChangeText={setContrasena}
+        secureTextEntry
+      />
 
-          {/* BOTÓN: Entrenador */}
-          <TouchableOpacity
-            style={[
-              styles.botonRol,
-              rolSeleccionado === "entrenador" && styles.botonRolActivo,
-            ]}
-            onPress={() => setRolSeleccionado("entrenador")}
-          >
-            <Text
-              style={[
-                styles.textoRol,
-                rolSeleccionado === "entrenador" && styles.textoRolActivo,
-              ]}
-            >
-              Entrenador
-            </Text>
-          </TouchableOpacity>
-        </View>
+      {error && <Text style={{ color: "red", marginBottom: 10 }}>{error}</Text>}
 
-        <TouchableOpacity
-          style={[globalStyles.button, globalStyles.buttonPrimary]}
-          onPress={handleRegistro}
-          disabled={cargando}
-        >
-          {cargando ? (
-            <ActivityIndicator color={colors.white} />
-          ) : (
-            <Text style={globalStyles.buttonText}>Registrarse</Text>
-          )}
-        </TouchableOpacity>
+      <TouchableOpacity
+        style={[
+          globalStyles.button,
+          globalStyles.buttonPrimary,
+          { width: "100%", opacity: loading ? 0.7 : 1 },
+        ]}
+        onPress={handleRegistro}
+        disabled={loading}
+      >
+        <Text style={globalStyles.buttonText}>
+          {loading ? "Registrando..." : "Registrar"}
+        </Text>
+      </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.linkVolver}>Volver al inicio de sesión</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        onPress={() => router.push("/auth/login")}
+        style={{ marginTop: 15 }}
+      >
+        <Text style={{ color: globalStyles.textPrimary.color, fontWeight: "600" }}>
+          ¿Ya tienes cuenta? Iniciar sesión
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  labelRol: {
-    fontSize: fontSize.md,
-    marginBottom: spacing.sm,
-    color: colors.textPrimary,
-    fontWeight: "500",
-  },
-  contenedorRoles: {
-    flexDirection: "row",
-    gap: spacing.sm,
-    marginBottom: spacing.lg,
-  },
-  botonRol: {
-    flex: 1,
-    padding: spacing.md,
-    borderRadius: borderRadius.md,
-    borderWidth: 2,
-    borderColor: colors.border,
-    alignItems: "center",
-    backgroundColor: colors.white,
-  },
-  botonRolActivo: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryLight,
-  },
-  textoRol: {
-    fontSize: fontSize.md,
-    color: colors.textSecondary,
-  },
-  textoRolActivo: {
-    color: colors.primary,
-    fontWeight: "bold",
-  },
-  linkVolver: {
-    textAlign: "center",
-    marginTop: spacing.lg,
-    color: colors.primary,
-    fontSize: fontSize.sm,
-  },
-});

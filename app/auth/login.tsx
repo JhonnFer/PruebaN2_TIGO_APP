@@ -1,126 +1,83 @@
-import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { useAuth } from "../../src/presentation/hooks/useAuth";
-import { globalStyles } from "../../src/styles/globalStyles";
-import { colors, fontSize, spacing } from "../../src/styles/theme";
+import { View, TextInput, Text, TouchableOpacity } from "react-native";
+import { useAuth } from "@/src/presentation/hooks/useAuth";
+import { globalStyles } from "@/src/styles/globalStyles";
+import { useRouter } from "expo-router";
 
 export default function LoginScreen() {
-  // ESTADO LOCAL
+  const { login, loginInvitado, error, loading, usuario } = useAuth();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [cargando, setCargando] = useState(false);
-
-  // HOOKS
-  const { iniciarSesion } = useAuth();
+  const [contrasena, setContrasena] = useState("");
   const router = useRouter();
 
-  /**
-   * Manejar inicio de sesión
-   */
   const handleLogin = async () => {
-    // VALIDACIÓN: Campos vacíos
-    if (!email || !password) {
-      Alert.alert("Error", "Por favor completa todos los campos");
-      return;
-    }
-
-    // INICIO DE SESIÓN
-    setCargando(true);
-    const resultado = await iniciarSesion(email, password);
-    setCargando(false);
-
-    // MANEJO DE RESULTADO
-    if (resultado.success) {
-      // Éxito: Redirigir a tabs
-      // replace() para que no pueda volver con botón atrás
-      router.replace("/(tabs)");
-    } else {
-      // Error: Mostrar mensaje
-      Alert.alert("Error", resultado.error || "No se pudo iniciar sesión");
+    try {
+      const user = await login(email, contrasena);
+      alert(`Bienvenido ${user.nombre} (${user.role})`);
+      router.push("/"); // Redirige al dashboard o pantalla principal
+    } catch (e: any) {
+      alert(`Error: ${e.message}`);
     }
   };
 
+  const handleInvitado = () => {
+    const invitado = loginInvitado();
+    alert(`Bienvenido ${invitado.nombre} (${invitado.role})`);
+    router.push("/"); // Redirige al dashboard como invitado
+  };
+
   return (
-    <View style={globalStyles.container}>
-      <View style={globalStyles.contentPadding}>
-        <Text style={styles.titulo}>Gym App</Text>
-        <Text style={styles.subtitulo}>Inicia sesión para continuar</Text>
+    <View style={globalStyles.containerCentered}>
+      <Text style={globalStyles.title}>Iniciar Sesión</Text>
 
-        <TextInput
-          style={globalStyles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"        // No capitalizar
-          keyboardType="email-address" // Teclado de email
-        />
+      <TextInput
+        style={[globalStyles.input, { width: "100%" }]}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+      />
 
-        <TextInput
-          style={globalStyles.input}
-          placeholder="Contraseña"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry // Ocultar texto
-        />
+      <TextInput
+        style={[globalStyles.input, { width: "100%" }]}
+        placeholder="Contraseña"
+        value={contrasena}
+        onChangeText={setContrasena}
+        secureTextEntry
+      />
 
-        <TouchableOpacity
-          style={[
-            globalStyles.button,
-            globalStyles.buttonPrimary,
-            styles.botonLogin,
-          ]}
-          onPress={handleLogin}
-          disabled={cargando} // Deshabilitar mientras carga
-        >
-          {cargando ? (
-            <ActivityIndicator color={colors.white} />
-          ) : (
-            <Text style={globalStyles.buttonText}>Iniciar Sesión</Text>
-          )}
-        </TouchableOpacity>
+      {error && <Text style={{ color: "red", marginBottom: 10 }}>{error}</Text>}
 
-        <TouchableOpacity onPress={() => router.push("/auth/registro")}>
-          <Text style={styles.linkRegistro}>
-            ¿No tienes cuenta? Regístrate aquí
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        style={[globalStyles.button, globalStyles.buttonPrimary, { width: "100%" }]}
+        onPress={handleLogin}
+        disabled={loading}
+      >
+        <Text style={globalStyles.buttonText}>
+          {loading ? "Ingresando..." : "Login"}
+        </Text>
+      </TouchableOpacity>
+
+      {/* Botón para invitado */}
+      <TouchableOpacity
+        style={[globalStyles.button, globalStyles.buttonSecondary, { width: "100%", marginTop: 10 }]}
+        onPress={handleInvitado}
+      >
+        <Text style={globalStyles.buttonText}>Entrar como Invitado</Text>
+      </TouchableOpacity>
+
+      {/* Enlace a registro */}
+      <TouchableOpacity onPress={() => router.push("/auth/registro")} style={{ marginTop: 15 }}>
+        <Text style={{ color: globalStyles.textPrimary.color, fontWeight: "600" }}>
+          ¿No tienes cuenta? Registrarse
+        </Text>
+      </TouchableOpacity>
+
+      {usuario && (
+        <Text style={{ marginTop: 20, color: globalStyles.textPrimary.color }}>
+          Usuario activo: {usuario.nombre} ({usuario.role})
+        </Text>
+      )}
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  titulo: {
-    fontSize: fontSize.xxxl,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: spacing.sm,
-    marginTop: spacing.xxl * 2,
-    color: colors.textPrimary,
-  },
-  subtitulo: {
-    fontSize: fontSize.md,
-    textAlign: "center",
-    marginBottom: spacing.xl,
-    color: colors.textSecondary,
-  },
-  botonLogin: {
-    marginTop: spacing.sm,
-  },
-  linkRegistro: {
-    textAlign: "center",
-    marginTop: spacing.lg,
-    color: colors.primary,
-    fontSize: fontSize.sm,
-  },
-});
-

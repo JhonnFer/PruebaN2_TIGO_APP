@@ -1,34 +1,25 @@
-import { Stack, useRouter, useSegments } from "expo-router";
+// app/_layout.tsx
+import { Slot, useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
 import { useAuth } from "../src/presentation/hooks/useAuth";
 
 export default function RootLayout() {
-  const { usuario, cargando } = useAuth();
-  const segments = useSegments();
+  const { usuario, loading } = useAuth();
   const router = useRouter();
+  const segments = useSegments();
 
   useEffect(() => {
-    // Esperar a que termine de cargar
-    if (cargando) return;
+    if (loading) return;
 
-    // Determinar si estamos en rutas de auth
     const enAuth = segments[0] === "auth";
 
-    // REGLA 1: Si NO hay usuario y NO está en auth → Redirigir a login
     if (!usuario && !enAuth) {
-      router.replace("/auth/login");
+      setTimeout(() => router.replace("/auth/login"), 0);
+    } else if (usuario && enAuth) {
+      setTimeout(() => router.replace("/(tabs)"), 0);
     }
-    // REGLA 2: Si HAY usuario y está en auth → Redirigir a tabs
-    else if (usuario && enAuth) {
-      router.replace("/(tabs)");
-    }
-  }, [usuario, segments, cargando]);
+  }, [usuario, loading, segments]);
 
-  return (
-    <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="auth" options={{ headerShown: false }} />
-    </Stack>
-  );
+  // Slot raíz: renderiza la ruta correspondiente
+  return <Slot />;
 }
-
