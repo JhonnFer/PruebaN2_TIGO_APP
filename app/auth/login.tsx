@@ -13,7 +13,7 @@ export default function LoginScreen() {
   // ---------------------- Login como Usuario Registrado ----------------------
   const handleLoginUsuario = async () => {
     try {
-      const user = await login(email, contrasena, router, "Usuario");
+      const user = await login(email, contrasena, "Registrado");
       alert(`Bienvenido ${user.nombre} (Usuario Registrado)`);
     } catch (e: any) {
       alert(`Error: ${e.message}`);
@@ -23,7 +23,7 @@ export default function LoginScreen() {
   // ---------------------- Login como Asesor Comercial ----------------------
   const handleLoginAsesor = async () => {
     try {
-      const user = await login(email, contrasena, router, "Asesor");
+      const user = await login(email, contrasena, "Asesor");
       alert(`Bienvenido ${user.nombre} (Asesor Comercial)`);
     } catch (e: any) {
       alert(`Error: ${e.message}`);
@@ -91,14 +91,14 @@ export default function LoginScreen() {
 
       {/* Enlace a recuperación de contraseña */}
       <TouchableOpacity onPress={() => router.push("/auth/recuperar")} style={{ marginTop: 15 }}>
-        <Text style={{ color: globalStyles.textPrimary.color, fontWeight: "600" }}>
+        <Text style={[globalStyles.textPrimary, { fontWeight: "600" }]}>
           ¿Olvidaste tu contraseña?
         </Text>
       </TouchableOpacity>
 
       {/* Mostrar info de usuario activo */}
       {usuario && (
-        <Text style={{ marginTop: 20, color: globalStyles.textPrimary.color }}>
+        <Text style={[globalStyles.textPrimary, { marginTop: 20 }]}>
           Usuario activo: {usuario.nombre} ({usuario.role})
         </Text>
       )}

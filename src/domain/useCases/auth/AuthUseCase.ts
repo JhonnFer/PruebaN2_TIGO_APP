@@ -4,6 +4,7 @@ import { Usuario } from "../../models/Usuario";
 import { supabase } from "@/src/data/services/supabaseClient";
 import { UsuarioRepository, Role } from "@/src/domain/repositories/UsuarioRepository";
 
+
 export class AuthUseCase {
   constructor(private usuarioRepo: UsuarioRepository) {}
 

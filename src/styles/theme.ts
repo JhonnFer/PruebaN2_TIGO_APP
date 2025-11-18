@@ -1,3 +1,4 @@
+//src\styles\theme.ts
 /**
  * Sistema de Diseño - Tokens de Diseño
  * Centraliza colores, espaciados, fuentes y otros valores

@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Alert } from "react-native";
-import { AuthUseCase, Role } from "@/src/domain/useCases/auth/AuthUseCase";
+import { AuthUseCase } from "@/src/domain/useCases/auth/AuthUseCase";
 import { UsuarioRepositoryImpl } from "@/src/data/repositories/UsuarioRepositoryImpl";
 import { Usuario } from "@/src/domain/models/Usuario";
 import { supabase } from "@/src/data/services/supabaseClient";
 import { solicitarResetPassword, confirmarResetPassword } from "@/src/domain/useCases/auth/resetPasswordUseCase";
+import { Role } from "@/src/domain/repositories/UsuarioRepository";
 const usuarioRepo = new UsuarioRepositoryImpl();
 const authUseCase = new AuthUseCase(usuarioRepo);
 

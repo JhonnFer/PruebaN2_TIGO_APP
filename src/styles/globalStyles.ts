@@ -1,10 +1,6 @@
+// src/styles/globalStyles.ts
 import { StyleSheet } from "react-native";
 import { borderRadius, colors, fontSize, shadows, spacing } from "./theme";
-
-/**
- * Estilos Globales Reutilizables
- * Componentes comunes usados en toda la aplicación
- */
 
 export const globalStyles = StyleSheet.create({
   // CONTENEDORES
@@ -73,87 +69,138 @@ export const globalStyles = StyleSheet.create({
   card: {
     backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
-    padding: spacing.md,
     marginBottom: spacing.md,
+    overflow: "hidden",
     ...shadows.medium,
   },
 
-  cardImage: {
-    width: "100%",
-    height: 200,
-    borderRadius: borderRadius.md,
+  cardTop: {
+    height: 100,
+    backgroundColor: "#6A5ACD",
   },
 
-  // TEXTOS
-  title: {
-    fontSize: fontSize.xxl,
+  cardContent: {
+    padding: spacing.md,
+  },
+
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+
+  cardName: {
+    fontSize: fontSize.md,
     fontWeight: "bold",
     color: colors.textPrimary,
-    marginBottom: spacing.md,
   },
 
-  subtitle: {
-    fontSize: fontSize.lg,
-    fontWeight: "600",
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-  },
-
-  textPrimary: {
+  cardPrice: {
     fontSize: fontSize.md,
-    color: colors.textPrimary,
+    fontWeight: "bold",
+    color: colors.primary,
   },
 
-  textSecondary: {
+  cardPromo: {
+    backgroundColor: "#d4f4dd",
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginBottom: 8,
+  },
+
+  cardPromoText: {
+    color: "#2a7f3e",
+    fontWeight: "bold",
+  },
+
+  cardDescription: {
     fontSize: fontSize.sm,
     color: colors.textSecondary,
+    marginBottom: 8,
   },
 
-  textTertiary: {
+  cardDetails: {
+    flexDirection: "row",
+    gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+    paddingTop: 8,
+  },
+
+  cardDetail: {
     fontSize: fontSize.sm,
-    color: colors.textTertiary,
+    color: colors.textPrimary,
+  },
+
+  cardButton: {
+    marginTop: 12,
+    backgroundColor: colors.primary,
+    paddingVertical: 10,
+    borderRadius: borderRadius.md,
+    alignItems: "center",
+  },
+
+  cardButtonText: {
+    color: colors.white,
+    fontWeight: "bold",
   },
 
   // HEADER
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    backgroundColor: colors.primary,
     padding: spacing.md,
-    backgroundColor: colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    paddingBottom: 64,
   },
 
-  // CHIPS (TAGS)
-  chip: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: colors.primaryLight,
-    borderRadius: borderRadius.round,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-    gap: spacing.xs,
+  headerTitle: {
+    fontSize: fontSize.xl,
+    fontWeight: "bold",
+    color: colors.white,
   },
 
-  chipText: {
+  headerSubtitle: {
     fontSize: fontSize.sm,
-    color: colors.primary,
-    fontWeight: "500",
+    color: "rgba(255,255,255,0.8)",
+    marginTop: 4,
   },
 
-  // ESTADOS
-  emptyState: {
-    textAlign: "center",
-    color: colors.textSecondary,
-    fontSize: fontSize.md,
-    marginTop: spacing.xl,
+  // SEARCH
+  searchContainer: {
+    flexDirection: "row",
+    marginHorizontal: spacing.md,
+    marginTop: -32,
+    zIndex: 10,
   },
 
-  loadingContainer: {
+  searchInput: {
     flex: 1,
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: 12,
+    height: 40,
+    elevation: 3,
+  },
+
+  searchButton: {
+    backgroundColor: colors.primary,
+    marginLeft: 8,
+    paddingHorizontal: 12,
+    borderRadius: borderRadius.md,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: colors.background,
+  },
+
+  searchButtonText: {
+    color: colors.white,
+    fontSize: fontSize.md,
+  },
+
+  sectionTitle: {
+    fontSize: fontSize.md,
+    fontWeight: "bold",
+    color: colors.textPrimary,
+    margin: spacing.md,
   },
 });

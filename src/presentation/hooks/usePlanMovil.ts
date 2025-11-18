@@ -1,21 +1,21 @@
+// src/presentation/hooks/usePlanMovil.ts
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/src/data/services/supabaseClient";
+import { usePermisos } from "./usePermisos";
 
 export function usePlanMovil() {
+  const { puedeVerCatalogo, puedeEliminar } = usePermisos();
   const [planes, setPlanes] = useState<any[]>([]);
   const [cargando, setCargando] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const cargarPlanes = useCallback(async () => {
+    if (!puedeVerCatalogo) return;
     try {
       setCargando(true);
       setError(null);
-      const { data, error } = await supabase.from("planes").select("*");
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
+      const { data, error } = await supabase.from("planes_moviles").select("*");
+      if (error) throw new Error(error.message);
       setPlanes(data || []);
     } catch (err: any) {
       setError(err.message);
@@ -23,18 +23,17 @@ export function usePlanMovil() {
     } finally {
       setCargando(false);
     }
-  }, []);
+  }, [puedeVerCatalogo]);
 
-  const buscarPlan = async (termino: string) => {
+  const buscarPlan = useCallback(async (termino: string) => {
+    if (!puedeVerCatalogo) return;
     try {
       setCargando(true);
       const { data, error } = await supabase
-        .from("planes")
+        .from("planes_moviles")
         .select("*")
         .ilike("nombre", `%${termino}%`);
-
       if (error) throw new Error(error.message);
-
       setPlanes(data || []);
     } catch (err: any) {
       setError(err.message);
@@ -42,11 +41,12 @@ export function usePlanMovil() {
     } finally {
       setCargando(false);
     }
-  };
+  }, [puedeVerCatalogo]);
 
   const eliminarPlan = async (planId: string) => {
+    if (!puedeEliminar) return { success: false, error: "No tienes permisos" };
     try {
-      const { error } = await supabase.from("planes").delete().eq("id", planId);
+      const { error } = await supabase.from("planes_moviles").delete().eq("planid", planId);
       if (error) throw new Error(error.message);
       return { success: true };
     } catch (err: any) {
@@ -55,7 +55,7 @@ export function usePlanMovil() {
   };
 
   useEffect(() => {
-    cargarPlanes(); // Cargar planes al montar el hook
+    cargarPlanes();
   }, [cargarPlanes]);
 
   return {
@@ -63,7 +63,7 @@ export function usePlanMovil() {
     cargando,
     error,
     cargarPlanes,
-    buscarPlan,
+    buscarPlan, // <---- ¡agregado!
     eliminarPlan,
   };
 }
